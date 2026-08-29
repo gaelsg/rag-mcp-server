@@ -15,15 +15,19 @@ Servidor MCP de RAG (Retrieval-Augmented Generation) sobre documentación propia
 sudo systemctl enable --now ollama
 ollama pull bge-m3
 
-# 2. Qdrant
-docker run -d --name qdrant -p 6333:6333 -p 6334:6334 \
-  -v ~/projects/rag-mcp-server/qdrant_storage:/qdrant/storage:Z \
-  docker.io/qdrant/qdrant
+# 2. Qdrant, como servicio systemd --user via Podman Quadlet (sobrevive reboots)
+mkdir -p ~/.config/containers/systemd
+cp systemd/qdrant.container ~/.config/containers/systemd/
+loginctl enable-linger $USER   # para que arranque sin sesion activa
+systemctl --user daemon-reload
+systemctl --user start qdrant.service
 
 # 3. Dependencias del proyecto
 uv sync
 cp .env.example .env
 ```
+
+Qdrant corre gestionado por systemd (Podman Quadlet, `~/.config/containers/systemd/qdrant.container`), no `docker run` manual — así sobrevive un reinicio del server sin intervención. Ver `systemd/qdrant.container` y `docs/bitacora/2026-08-29.md`.
 
 ## Herramientas expuestas
 

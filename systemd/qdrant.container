@@ -1,0 +1,16 @@
+[Unit]
+Description=Qdrant vector DB (rag-mcp-server)
+After=network-online.target
+
+[Container]
+Image=docker.io/qdrant/qdrant:latest
+ContainerName=qdrant
+PublishPort=6333:6333
+PublishPort=6334:6334
+Volume=/home/gaelsg/projects/rag-mcp-server/qdrant_storage:/qdrant/storage
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
