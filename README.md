@@ -40,6 +40,10 @@ Qdrant corre gestionado por systemd (Podman Quadlet, `~/.config/containers/syste
 uv run rag-mcp-server
 ```
 
+## Tracing
+
+Con `OTEL_EXPORTER_OTLP_ENDPOINT` seteado (ver `.env.example`), `search_knowledge` queda en Jaeger con dos spans hijos reales (`ollama.embed`, `qdrant.query_points`) además del span automático de la tool call — separa cuánto tiempo se va en embedding vs. en la consulta al vector DB. Ver [`devops-multiagent`](https://github.com/gaelsg/devops-multiagent#tracing-distribuido-opentelemetry--jaeger) para el detalle completo.
+
 ## Evals (estilo RAGAS)
 
 ```bash

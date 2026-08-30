@@ -10,9 +10,15 @@ from mcp.server.mcpserver import MCPServer
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
+from opentelemetry import trace
+
+from rag_mcp_server.tracing import configure_tracing
+
 load_dotenv()
+configure_tracing("rag-mcp-server")
 
 mcp = MCPServer("rag-mcp-server")
+_tracer = trace.get_tracer("rag-mcp-server")
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
 EMBED_MODEL = os.environ.get("EMBED_MODEL", "bge-m3")
@@ -36,13 +42,16 @@ def _qdrant() -> QdrantClient:
 
 
 def _embed(text: str) -> list[float]:
-    resp = requests.post(
-        f"{OLLAMA_HOST}/api/embed",
-        json={"model": EMBED_MODEL, "input": text},
-        timeout=60,
-    )
-    resp.raise_for_status()
-    return resp.json()["embeddings"][0]
+    with _tracer.start_as_current_span(
+        "ollama.embed", attributes={"gen_ai.system": "ollama", "gen_ai.request.model": EMBED_MODEL}
+    ):
+        resp = requests.post(
+            f"{OLLAMA_HOST}/api/embed",
+            json={"model": EMBED_MODEL, "input": text},
+            timeout=60,
+        )
+        resp.raise_for_status()
+        return resp.json()["embeddings"][0]
 
 
 def _chunk_markdown(text: str, source: str) -> list[dict[str, Any]]:
@@ -102,11 +111,12 @@ def index_corpus() -> dict[str, Any]:
 def search_knowledge(query: str, top_k: int = 5) -> list[dict[str, Any]]:
     """Busca en la base de conocimiento (bitacora indexada) los fragmentos mas relevantes para query."""
     vector = _embed(query)
-    results = _qdrant().query_points(
-        collection_name=COLLECTION,
-        query=vector,
-        limit=top_k,
-    )
+    with _tracer.start_as_current_span("qdrant.query_points", attributes={"db.system": "qdrant"}):
+        results = _qdrant().query_points(
+            collection_name=COLLECTION,
+            query=vector,
+            limit=top_k,
+        )
     return [
         {
             "score": point.score,
