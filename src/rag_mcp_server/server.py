@@ -72,7 +72,7 @@ def index_corpus() -> dict[str, Any]:
     files = sorted(
         (path, corpus_path.parents[1].name)
         for corpus_path in CORPUS_PATHS
-        for path in corpus_path.glob("*.md")
+        for path in corpus_path.glob("[0-9]*.md")
     )
     points: list[PointStruct] = []
     for path, project in files:

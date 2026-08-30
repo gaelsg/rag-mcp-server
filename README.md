@@ -6,7 +6,7 @@ Servidor MCP de RAG (Retrieval-Augmented Generation) sobre documentación propia
 
 - **Embeddings:** `bge-m3` (multilingüe, 1024 dims) corriendo local vía Ollama, acelerado por GPU (RTX 5080).
 - **Vector DB:** Qdrant, en Docker/Podman, con almacenamiento persistente en `qdrant_storage/` (gitignored).
-- **Corpus inicial:** `docs/bitacora/*.md` de proxmox-mcp-server, chunkeado por encabezado `##`.
+- **Corpus inicial:** `docs/bitacora/*.md` de proxmox-mcp-server, chunkeado por encabezado `##`. Solo archivos con nombre de fecha (`[0-9]*.md`) — se excluye `README.md` a propósito, ver `docs/bitacora/`.
 
 ## Setup
 
@@ -39,6 +39,19 @@ Qdrant corre gestionado por systemd (Podman Quadlet, `~/.config/containers/syste
 ```bash
 uv run rag-mcp-server
 ```
+
+## Evals (estilo RAGAS)
+
+```bash
+uv run python evals/run_evals.py
+```
+
+Dos capas, igual que en `devops-multiagent`:
+
+- **`evals/retrieval_metrics.py`** — Precision@k, Recall@k, MRR, deterministas, contra Qdrant real. `evals/golden_dataset.py` tiene 12 queries reales (no sintéticas) sobre el contenido real de la bitácora, cada una con su fuente esperada armada a mano leyendo los `.md`.
+- **`evals/generation_metrics.py`** — faithfulness (¿la respuesta generada solo afirma lo que dice el contexto recuperado?) y answer relevancy (¿la respuesta responde lo que se preguntó?), estilo RAGAS: `qwen3:14b` genera la respuesta, la descompone en afirmaciones atómicas, y juzga cada una contra el contexto; para relevancy, genera preguntas sintéticas a partir de la respuesta y mide similitud coseno (embeddings `bge-m3`) contra la query original.
+
+**Limitación documentada, no escondida:** el juez es el mismo modelo local que genera (`qwen3:14b`) — self-grading, no un juez independiente más fuerte. Se aceptó por ser 100% local y gratis, coherente con el resto del proyecto; los scores hay que leerlos como señal relativa (¿bajó vs. la corrida anterior?), no como verdad absoluta. Detalle completo en `docs/29110/idea5-evals-rag/`.
 
 ## Nota
 
