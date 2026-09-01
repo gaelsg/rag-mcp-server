@@ -14,3 +14,9 @@ wheels/
 
 # Datos de Qdrant
 qdrant_storage/
+
+# Espejo sincronizado desde Plane (webhook) -- Plane es la fuente de verdad,
+# esto es solo material de indexado regenerable, no documentacion propia del
+# repo. Puede contener contenido de trabajo mas informal que una bitacora
+# curada, no se versiona a proposito.
+docs/plane-sync/

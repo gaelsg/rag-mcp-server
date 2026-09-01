@@ -60,3 +60,17 @@ Dos capas, igual que en `devops-multiagent`:
 ## Nota
 
 `index_corpus()` hace `recreate_collection` (borra y reindexa todo) — simple para este tamaño de corpus, pero no incremental. Si el corpus crece mucho, cambiar a upsert selectivo por archivo modificado.
+
+**Gotcha real:** `index_corpus()` solo toma archivos que *empiezan con un dígito*
+(`glob("[0-9]*.md")`, pensado para nombres tipo bitácora `2026-08-30-*.md`) — un archivo que no
+matchee ese patrón se ignora en silencio, sin error. Verificado al integrar `docs/plane-sync/`
+(ver abajo): el primer intento nombraba los archivos empezando con el slug del workspace y nunca
+aparecían en Qdrant.
+
+## Fuente adicional del corpus: issues de Plane
+
+`docs/plane-sync/` (gitignored — Plane es la fuente de verdad, esto es solo un espejo regenerable)
+se sincroniza automáticamente vía un webhook que atiende
+[`devops-multiagent`](https://github.com/gaelsg/devops-multiagent#webhook-de-plane--rag-mismo-servicio-puerto-8090)
+cuando se crea/actualiza un issue en Plane — cada issue se convierte en un `.md` más de
+`CORPUS_PATH`, sin ningún código nuevo en este repo.
