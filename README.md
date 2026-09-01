@@ -1,12 +1,12 @@
 # rag-mcp-server
 
-Servidor MCP de RAG (Retrieval-Augmented Generation) sobre documentación propia. Fase 3 del roadmap de agentes: en vez de que un LLM razone solo con conocimiento genérico, busca semánticamente en tu propia base de conocimiento (por ahora, la bitácora de [proxmox-mcp-server](https://github.com/gaelsg/proxmox-mcp-server)) y trae los fragmentos relevantes como contexto.
+Servidor MCP de RAG (Retrieval-Augmented Generation) sobre documentación propia. Fase 3 del roadmap de agentes: en vez de que un LLM razone solo con conocimiento genérico, busca semánticamente en tu propia base de conocimiento y trae los fragmentos relevantes como contexto. Desde 2026-09-01 indexa las bitácoras de los 9 repos del portafolio (no solo la de [proxmox-mcp-server](https://github.com/gaelsg/proxmox-mcp-server)) más los issues/comentarios de Plane — ver `docs/bitacora/2026-09-01-corpus-completo.md`.
 
 ## Arquitectura
 
 - **Embeddings:** `bge-m3` (multilingüe, 1024 dims) corriendo local vía Ollama, acelerado por GPU (RTX 5080).
 - **Vector DB:** Qdrant, en Docker/Podman, con almacenamiento persistente en `qdrant_storage/` (gitignored).
-- **Corpus inicial:** `docs/bitacora/*.md` de proxmox-mcp-server, chunkeado por encabezado `##`. Solo archivos con nombre de fecha (`[0-9]*.md`) — se excluye `README.md` a propósito, ver `docs/bitacora/`.
+- **Corpus:** `docs/bitacora/*.md` de los 9 repos del portafolio + `docs/plane-sync/` (issues/comentarios de Plane), chunkeado por encabezado `##`. Solo archivos con nombre que empieza con dígito (`[0-9]*.md`) — se excluye `README.md` a propósito, ver `docs/bitacora/`.
 
 ## Setup
 
